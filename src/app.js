@@ -30,6 +30,10 @@ class ZenDash {
 
         // Change wallpaper every hour
         setInterval(() => this.loadWallpaper(), 3600000);
+
+        this.updateCalendar();
+        // Update calendar every minute to be safe
+        setInterval(() => this.updateCalendar(), 60000);
     }
 
     async loadData() {
@@ -43,8 +47,10 @@ class ZenDash {
             this.notes = data.notes || [];
             this.settings = data.settings || {
                 userName: 'User',
-                theme: 'auto'
+                theme: 'auto',
+                tasksExpanded: true
             };
+            if (this.settings.tasksExpanded === undefined) this.settings.tasksExpanded = true;
         } catch (error) {
             console.error('Error loading data:', error);
             this.folders = [
@@ -53,8 +59,10 @@ class ZenDash {
                 { id: 'f3', name: 'Belajar', todos: [], expanded: false }
             ];
             this.notes = [];
-            this.settings = { userName: 'User', theme: 'auto' };
+            this.settings = { userName: 'User', theme: 'auto', tasksExpanded: true };
         }
+        this.applyTasksState();
+        this.updateTaskButtonState();
     }
 
     async saveData() {
@@ -155,10 +163,16 @@ class ZenDash {
             const img = new Image();
             img.onload = () => {
                 const wallpaperElement = document.getElementById('wallpaper');
-                if (wallpaperElement) {
-                    wallpaperElement.style.backgroundImage = `url(${imageUrl})`;
-                    console.log('Wallpaper loaded from Unsplash:', imageUrl);
+                wallpaperElement.style.backgroundImage = `url(${imageUrl})`;
+
+                // Update Attribution
+                const authorLink = document.getElementById('photo-author-link');
+                const photoUser = data.results[randomIndex].user;
+                if (authorLink && photoUser) {
+                    authorLink.textContent = photoUser.name;
+                    authorLink.href = `${photoUser.links.html}?utm_source=zendash&utm_medium=referral`;
                 }
+                console.log('Wallpaper loaded from Unsplash:', imageUrl);
             };
             img.onerror = () => { throw new Error('Image preloading failed'); };
             img.src = imageUrl;
@@ -237,11 +251,48 @@ class ZenDash {
             const folderElement = this.createFolderElement(folder);
             container.appendChild(folderElement);
         });
+        this.updateTaskButtonState();
     }
 
     createFolderElement(folder) {
         const folderDiv = document.createElement('div');
         folderDiv.className = 'folder-item mb-2';
+        // Make draggable
+        folderDiv.setAttribute('draggable', 'true');
+        folderDiv.dataset.folderId = folder.id;
+
+        folderDiv.addEventListener('dragstart', (e) => {
+            e.stopPropagation(); // Prevent interfering with note dragging
+            this.draggedFolderId = folder.id;
+            e.dataTransfer.effectAllowed = 'move';
+            folderDiv.classList.add('opacity-50');
+        });
+
+        folderDiv.addEventListener('dragend', () => {
+            folderDiv.classList.remove('opacity-50');
+            this.draggedFolderId = null;
+            document.querySelectorAll('.folder-item').forEach(item => item.classList.remove('border-t-2', 'border-blue-400'));
+        });
+
+        folderDiv.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (this.draggedFolderId === folder.id) return;
+            folderDiv.classList.add('border-t-2', 'border-blue-400');
+        });
+
+        folderDiv.addEventListener('dragleave', () => {
+            folderDiv.classList.remove('border-t-2', 'border-blue-400');
+        });
+
+        folderDiv.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            folderDiv.classList.remove('border-t-2', 'border-blue-400');
+            if (this.draggedFolderId && this.draggedFolderId !== folder.id) {
+                this.reorderFolders(this.draggedFolderId, folder.id);
+            }
+        });
 
         const headerDiv = document.createElement('div');
         headerDiv.className = 'glass rounded-lg p-3 cursor-pointer flex items-center justify-between';
@@ -476,6 +527,12 @@ class ZenDash {
             addNoteBtn.addEventListener('click', () => this.showNoteModal());
         }
 
+        // Tasks sidebar toggle
+        const tasksToggleBtn = document.getElementById('tasks-toggle');
+        if (tasksToggleBtn) {
+            tasksToggleBtn.addEventListener('click', () => this.toggleTasks());
+        }
+
         // Note modal
         const saveNoteBtn = document.getElementById('save-note');
         const cancelNoteBtn = document.getElementById('cancel-note');
@@ -705,6 +762,110 @@ class ZenDash {
         this.notes = this.notes.filter(n => n.id !== noteId);
         await this.saveData();
         this.renderNotes();
+    }
+
+    toggleTasks() {
+        this.settings.tasksExpanded = !this.settings.tasksExpanded;
+        this.applyTasksState();
+        this.saveData();
+    }
+
+    updateCalendar() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+        const headerEl = document.getElementById('calendar-header');
+        if (headerEl) {
+            headerEl.textContent = `${months[month]} ${year}`;
+        }
+
+        const gridEl = document.getElementById('calendar-grid');
+        if (!gridEl) return;
+
+        gridEl.innerHTML = '';
+
+        // First day of current month (0-6)
+        const firstDay = new Date(year, month, 1).getDay();
+        // Total days in current month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const today = now.getDate();
+
+        // Empty slots for days before start of month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            gridEl.appendChild(emptyCell);
+        }
+
+        // Days of month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.textContent = day;
+            dayCell.className = 'w-7 h-7 text-sm flex items-center justify-center rounded-full transition-colors duration-200';
+
+            if (day === today) {
+                dayCell.classList.add('bg-white', 'bg-opacity-40', 'font-bold', 'text-white', 'shadow-sm');
+            } else {
+                dayCell.classList.add('hover:bg-white', 'hover:bg-opacity-10', 'cursor-default');
+            }
+
+            gridEl.appendChild(dayCell);
+        }
+    }
+
+    reorderFolders(draggedId, targetId) {
+        const draggedIndex = this.folders.findIndex(f => f.id === draggedId);
+        const targetIndex = this.folders.findIndex(f => f.id === targetId);
+
+        if (draggedIndex > -1 && targetIndex > -1) {
+            // Remove dragged item
+            const [draggedItem] = this.folders.splice(draggedIndex, 1);
+            // Insert at target index
+            this.folders.splice(targetIndex, 0, draggedItem);
+
+            this.saveData();
+            this.renderFolders();
+        }
+    }
+
+    applyTasksState() {
+        const sidebar = document.getElementById('tasks-sidebar');
+        const mainContent = document.getElementById('main-content-center');
+
+        if (sidebar) {
+            if (this.settings.tasksExpanded) {
+                sidebar.classList.remove('sidebar-collapsed');
+                if (mainContent) {
+                    mainContent.classList.add('pr-96');
+                }
+            } else {
+                sidebar.classList.add('sidebar-collapsed');
+                if (mainContent) {
+                    mainContent.classList.remove('pr-96');
+                }
+            }
+        }
+        this.updateTaskButtonState();
+    }
+
+    updateTaskButtonState() {
+        const toggleBtn = document.getElementById('tasks-toggle-text');
+        if (!toggleBtn) return;
+
+        // Calculate incomplete tasks
+        let incompleteCount = 0;
+        this.folders.forEach(folder => {
+            incompleteCount += folder.todos.filter(t => !t.completed).length;
+        });
+
+        if (this.settings.tasksExpanded) {
+            toggleBtn.textContent = `Hide Tasks (${incompleteCount})`;
+        } else {
+            toggleBtn.textContent = `Show Tasks (${incompleteCount})`;
+        }
     }
 }
 

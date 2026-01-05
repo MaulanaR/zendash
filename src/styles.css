@@ -58,7 +58,8 @@
 }
 
 /* Ensure proper centering with header inside main */
-main > div:first-child {
+/* Ensure proper centering with header inside main */
+#main-content-center {
   min-height: 100%;
   display: flex;
   flex-direction: column;
@@ -72,4 +73,12 @@ main > div:first-child {
 
 .sticky-note {
   user-select: none;
+}
+
+.sidebar-collapsed {
+  transform: translateX(100%);
+}
+
+.sidebar-collapsed #tasks-toggle-icon {
+  transform: rotate(180deg);
 }

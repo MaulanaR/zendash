@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        function createIcons() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create icons in different sizes
+            [16, 48, 128].forEach(size => {
+                canvas.width = size;
+                canvas.height = size;
+                
+                // Create gradient
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                
+                // Fill background
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+                
+                // Draw rounded corners
+                ctx.globalCompositeOperation = 'destination-in';
+                ctx.fillStyle = 'white';
+                roundRect(ctx, 0, 0, size, size, size * 0.15);
+                ctx.fill();
+                
+                // Draw text
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size * 0.5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Z', size / 2, size / 2);
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = `icon${size}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+        
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Auto-create icons on load
+        window.onload = createIcons;
+    </script>
+</head>
+<body>
+    <button onclick="createIcons()">Download Icons</button>
+    <p>Icons will be downloaded automatically when page loads.</p>
+</body>
+</html>

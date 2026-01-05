@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Folder and todo animations */
+.folder-item {
+  transition: all 0.3s ease;
+}
+
+.folder-item:hover {
+  transform: translateX(4px);
+}
+
+.todo-item {
+  transition: all 0.2s ease;
+}
+
+.todo-item:hover {
+  transform: translateX(2px);
+}
+
+/* Smooth transitions for state changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure proper centering with header inside main */
+main > div:first-child {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Sticky notes z-index adjustments */
+#sticky-notes-container {
+  z-index: 40;
+}
+
+.sticky-note {
+  user-select: none;
+}

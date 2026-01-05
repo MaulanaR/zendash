@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenDash</title>
+  <script type="module" crossorigin src="/assets/main-CKTXonpm.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-BkAisK1l.css">
+</head>
+
+<body class="overflow-hidden">
+    <!-- Background Layer -->
+    <div id="wallpaper" class="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000">
+        <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 h-screen flex flex-col">
+        <!-- Main Content Area -->
+        <main class="flex-1 flex relative">
+            <!-- Center Area - Quote with Header -->
+            <div class="flex-1 flex flex-col items-center justify-center px-8 pr-96">
+                <!-- Header with Clock and Greeting -->
+                <header class="text-white text-center animate-fade-in mb-8">
+                    <div id="clock" class="text-6xl font-light mb-2"></div>
+                    <div id="greeting" class="text-xl font-medium"></div>
+                </header>
+
+                <!-- Quote Container -->
+                <div id="quote-container" class="max-w-2xl text-center text-white animate-slide-up">
+                    <p id="quote-text" class="text-2xl md:text-3xl font-light mb-4 leading-relaxed drop-shadow-lg"></p>
+                    <p id="quote-author" class="text-lg opacity-90 mb-6"></p>
+                    <button id="refresh-quote"
+                        class="bg-white bg-opacity-20 backdrop-blur-sm px-6 py-2 rounded-full text-white hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30">
+                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg>
+                        Refresh Quote
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Todo List -->
+            <aside
+                class="fixed right-0 top-0 h-full w-90 bg-white bg-opacity-30 backdrop-blur-md border-l border-white border-opacity-20 p-4 overflow-y-auto z-20 mt-0">
+                <div class="text-white mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Tasks</h2>
+
+                    <!-- Add Folder Button -->
+                    <button id="add-folder"
+                        class="w-full bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-lg text-white hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30 mb-4">
+                        + Add Folder
+                    </button>
+
+                    <!-- Folders Container -->
+                    <div id="folders-container" class="space-y-2">
+                        <!-- Folders will be dynamically added here -->
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Sticky Notes Section -->
+        <div id="sticky-notes-container" class="fixed bottom-0 left-0 right-0 z-30 transition-all duration-300">
+            <!-- Toggle Button -->
+            <button id="notes-toggle"
+                class="absolute -top-10 left-4 bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-t-lg text-white hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30 border-b-0">
+                <span id="notes-toggle-text">📝 Show Notes</span>
+            </button>
+
+            <!-- Notes Panel -->
+            <div id="notes-panel"
+                class="hidden bg-black bg-opacity-40 backdrop-blur-lg border-t border-white border-opacity-20 p-4">
+                <!-- Add Note Button -->
+                <button id="add-note"
+                    class="mb-4 bg-yellow-400 hover:bg-yellow-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors duration-200 shadow-lg">
+                    + Add Note
+                </button>
+
+                <!-- Notes Container -->
+                <div id="notes-grid" class="flex flex-wrap gap-4 min-h-[200px] max-h-[300px] overflow-y-auto">
+                    <!-- Sticky notes will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="folder-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96">
+            <h3 class="text-lg font-semibold mb-4">Add Folder</h3>
+            <input type="text" id="folder-name" placeholder="Folder name"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-folder" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button id="save-folder"
+                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="todo-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96">
+            <h3 class="text-lg font-semibold mb-4">Add Task</h3>
+            <input type="text" id="todo-text" placeholder="Task description"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-todo" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button id="save-todo"
+                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96">
+            <h3 class="text-lg font-semibold mb-4">Add Note</h3>
+            <input type="text" id="note-title" placeholder="Note title (optional)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+            <textarea id="note-content" placeholder="Note content" rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500"></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-note" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button id="save-note"
+                    class="px-4 py-2 bg-yellow-400 text-gray-800 rounded-lg hover:bg-yellow-500">Save</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

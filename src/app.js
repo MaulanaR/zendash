@@ -551,6 +551,37 @@ class ZenDash {
             cancelNoteBtn.addEventListener('click', () => this.hideNoteModal());
         }
 
+        // About Modal
+        const aboutBtn = document.getElementById('about-btn');
+        const closeAboutBtn = document.getElementById('close-about');
+        const aboutModal = document.getElementById('about-modal');
+
+        if (aboutBtn && aboutModal) {
+            aboutBtn.addEventListener('click', () => {
+                aboutModal.classList.remove('hidden');
+                // Animate in
+                const content = aboutModal.querySelector('div');
+                if (content) {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }
+            });
+        }
+
+        if (closeAboutBtn && aboutModal) {
+            closeAboutBtn.addEventListener('click', () => {
+                aboutModal.classList.add('hidden');
+            });
+        }
+
+        if (aboutModal) {
+            aboutModal.addEventListener('click', (e) => {
+                if (e.target === aboutModal) {
+                    aboutModal.classList.add('hidden');
+                }
+            });
+        }
+
         // Event delegation for dynamically created elements
         document.addEventListener('click', (e) => {
             const target = e.target.closest('.add-todo-btn, .delete-folder-btn, .delete-todo-btn, input[type="checkbox"]');

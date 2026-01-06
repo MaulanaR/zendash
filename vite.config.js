@@ -14,5 +14,12 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      '/api/quotes': {
+        target: 'https://quotes.liupurnomo.com',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

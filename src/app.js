@@ -16,7 +16,7 @@ class ZenDash {
         await this.loadData();
         this.setupEventListeners();
         this.updateClock();
-        this.updateGreeting();
+        // this.updateGreeting();
         this.renderFolders();
         this.renderNotes();
         this.loadWallpaper();
@@ -26,7 +26,7 @@ class ZenDash {
         setInterval(() => this.updateClock(), 1000);
 
         // Update greeting every minute
-        setInterval(() => this.updateGreeting(), 60000);
+        // setInterval(() => this.updateGreeting(), 60000);
 
         // Change wallpaper every hour
         setInterval(() => this.loadWallpaper(), 3600000);
@@ -211,10 +211,10 @@ class ZenDash {
     async loadQuote() {
         try {
             // Valid public API
-            const response = await fetch('https://dummyjson.com/quotes/random');
+            const response = await fetch('/api/quotes/random');
             if (response.ok) {
                 const data = await response.json();
-                this.updateQuote(data.quote, data.author);
+                this.updateQuote(data.data.text, data.data.author);
                 return;
             }
             throw new Error('Quote API failed');

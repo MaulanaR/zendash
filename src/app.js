@@ -165,12 +165,18 @@ class ZenDash {
                 const wallpaperElement = document.getElementById('wallpaper');
                 wallpaperElement.style.backgroundImage = `url(${imageUrl})`;
 
-                // Update Attribution
                 const authorLink = document.getElementById('photo-author-link');
+                const downloadLink = document.getElementById('photo-download-link');
                 const photoUser = data.results[randomIndex].user;
+                const photoLinks = data.results[randomIndex].links;
+
                 if (authorLink && photoUser) {
-                    authorLink.textContent = photoUser.name;
+                    authorLink.textContent = `Photo by ${photoUser.name} on Unsplash`;
                     authorLink.href = `${photoUser.links.html}?utm_source=zendash&utm_medium=referral`;
+                }
+
+                if (downloadLink && photoLinks) {
+                    downloadLink.href = `${photoLinks.html}?utm_source=zendash&utm_medium=referral`;
                 }
                 console.log('Wallpaper loaded from Unsplash:', imageUrl);
             };

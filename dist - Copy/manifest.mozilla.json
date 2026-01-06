@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "ZenDash",
+    "version": "1.0.0",
+    "description": "Minimalis dashboard dengan kutipan motivasi, wallpaper dinamis, dan manajemen tugas",
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+    "permissions": [
+        "storage",
+        "alarms"
+    ],
+    "host_permissions": [
+        "https://api.unsplash.com/*",
+        "https://www.bing.com/*",
+        "https://api.quotable.io/*"
+    ],
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+    "background": {
+        "scripts": "background.js"
+    }
+}

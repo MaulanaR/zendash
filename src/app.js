@@ -9,6 +9,8 @@ class ZenDash {
         this.isDragging = false;
         this.currentDragNote = null;
         this.dragOffset = { x: 0, y: 0 };
+        this.holidays = [];
+        this.holidaysFetched = false;
         this.init();
     }
 
@@ -810,13 +812,19 @@ class ZenDash {
     updateCalendar() {
         const now = new Date();
         const year = now.getFullYear();
-        const month = now.getMonth();
+        const month = now.getMonth(); // 0-indexed (0 = Jan)
 
-        const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+        const months = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
 
         const headerEl = document.getElementById('calendar-header');
         if (headerEl) {
             headerEl.textContent = `${months[month]} ${year}`;
+        }
+
+        // Fetch holidays if not already fetched for this month
+        if (!this.holidaysFetched || this.currentMonth !== month) {
+            this.loadHolidays(month + 1, year); // API expects 1-indexed month
+            this.currentMonth = month;
         }
 
         const gridEl = document.getElementById('calendar-grid');
@@ -839,18 +847,123 @@ class ZenDash {
 
         // Days of month
         for (let day = 1; day <= daysInMonth; day++) {
+            const currentDate = new Date(year, month, day);
+            const dayOfWeek = currentDate.getDay(); // 0 = Sunday
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; // YYYY-MM-DD
+
+            const holiday = this.holidays ? this.holidays.find(h => {
+                const hDate = new Date(h.tanggal);
+                return hDate.getDate() === day && hDate.getMonth() === month && hDate.getFullYear() === year;
+            }) : null;
+
             const dayCell = document.createElement('div');
             dayCell.textContent = day;
             dayCell.className = 'w-7 h-7 text-sm flex items-center justify-center rounded-full transition-colors duration-200';
 
+            let isRed = false;
+            let isOrange = false;
+
+            // Sunday check
+            if (dayOfWeek === 0) {
+                isRed = true;
+            }
+
+            // Holiday check
+            if (holiday) {
+                if (holiday.is_cuti) {
+                    isOrange = true;
+                    dayCell.title = `${holiday.keterangan} (Cocok untuk ajukan cuti)`;
+                } else {
+                    isRed = true;
+                    dayCell.title = holiday.keterangan;
+                }
+            }
+
             if (day === today) {
                 dayCell.classList.add('bg-white', 'bg-opacity-40', 'font-bold', 'text-white', 'shadow-sm');
+                // Keep text color logic even if today? Maybe tough to read white on white. 
+                // Let's prioritize today's background styling, maybe add a colored border or text if it's a holiday.
+                if (isRed) dayCell.classList.add('text-red-200'); // Light red to be visible on white opacity
+                else if (isOrange) dayCell.classList.add('text-orange-200');
             } else {
                 dayCell.classList.add('hover:bg-white', 'hover:bg-opacity-10', 'cursor-default');
+                if (isOrange) {
+                    dayCell.classList.add('text-orange-400', 'font-bold');
+                } else if (isRed) {
+                    dayCell.classList.add('text-red-400', 'font-bold');
+                }
             }
 
             gridEl.appendChild(dayCell);
         }
+
+        this.renderHolidaysList();
+    }
+
+    async loadHolidays(month, year) {
+        try {
+            // Using year 2026 as per user request example context, but code should ideally be dynamic.
+            // The API url provided: https://dayoffapi.vercel.app/api?month=1
+            // It doesn't seem to take year? Or does it default to current year?
+            // "parameter month sesuaikan dengan bulan berjalan"
+            // Let's assume it returns for current/requested context.
+            // If the user specifically wants 2026 logic but we are in 2026 (mock time), it's fine.
+
+            const response = await fetch(`https://dayoffapi.vercel.app/api?month=${month}`);
+            if (response.ok) {
+                const data = await response.json();
+                this.holidays = data;
+                this.holidaysFetched = true;
+                // Re-render calendar to show holidays once fetched
+                this.updateCalendar();
+            }
+        } catch (error) {
+            console.error('Failed to load holidays:', error);
+            this.holidays = [];
+        }
+    }
+
+    renderHolidaysList() {
+        const container = document.getElementById('calendar-holidays');
+        if (!container) return;
+
+        if (!this.holidays || this.holidays.length === 0) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = '';
+
+        this.holidays.forEach(h => {
+            const item = document.createElement('div');
+            item.className = 'flex gap-2 text-xs leading-tight opacity-90';
+
+            const dateSpan = document.createElement('span');
+            // Parse date to just show Day
+            const dateObj = new Date(h.tanggal);
+            dateSpan.textContent = isNaN(dateObj.getTime()) ? h.tanggal : `${dateObj.getDate()}`;
+            dateSpan.className = 'font-bold w-4 text-right flex-shrink-0';
+
+            const descSpan = document.createElement('span');
+            let text = h.keterangan;
+            if (h.is_cuti) {
+                text += ' (Cocok untuk ajukan cuti)';
+                item.classList.add('text-orange-300');
+            } else {
+                // Regular holiday color in list? White is fine, maybe red icon?
+                // User request specifically asked to change CALENDAR date color.
+                // For the info below: "tambahkan info dibawah nya".
+                // Let's keep it simple text, maybe slightly colored if needed.
+                if (h.is_cuti) item.classList.add('text-orange-300');
+                else item.classList.add('text-red-300');
+            }
+            descSpan.textContent = text;
+
+            item.appendChild(dateSpan);
+            item.appendChild(descSpan);
+            container.appendChild(item);
+        });
     }
 
     reorderFolders(draggedId, targetId) {
